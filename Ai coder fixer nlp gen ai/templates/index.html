@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>USH | Advanced AI Debugging Suite</title>
+    
+    <!-- Professional Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Prism.js for Professional Syntax Highlighting -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+
+    <style>
+        :root {
+            --bg-deep: #05070a;
+            --surface: rgba(13, 17, 23, 0.8);
+            --accent: #00f2ff;
+            --accent-soft: rgba(0, 242, 255, 0.1);
+            --border: rgba(255, 255, 255, 0.08);
+            --text-main: #f0f6fc;
+            --text-dim: #8b949e;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background: var(--bg-deep);
+            color: var(--text-main);
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Animated Mesh Background */
+        .bg-glow {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at 50% 50%, #101524 0%, #05070a 100%);
+            z-index: -1;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Header / Nav */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .brand { display: flex; align-items: center; gap: 12px; }
+        .brand-logo { 
+            width: 40px; height: 40px; 
+            background: var(--accent); 
+            border-radius: 10px; 
+            display: grid; place-items: center;
+            color: #000; font-weight: 800;
+            box-shadow: 0 0 20px var(--accent-soft);
+        }
+        .brand-name { font-size: 1.4rem; font-weight: 800; letter-spacing: -0.5px; }
+        .brand-name span { color: var(--text-dim); font-weight: 300; font-size: 0.9rem; margin-left: 5px; }
+
+        /* Status Command Bar */
+        .status-bar {
+            display: flex;
+            gap: 20px;
+            background: var(--surface);
+            padding: 10px 20px;
+            border-radius: 30px;
+            border: 1px solid var(--border);
+            font-size: 0.75rem;
+            color: var(--text-dim);
+        }
+        .status-item { display: flex; align-items: center; gap: 6px; }
+        .dot { width: 6px; height: 6px; background: var(--accent); border-radius: 50%; box-shadow: 0 0 8px var(--accent); }
+
+        /* Editor Layout */
+        .workspace {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            height: 650px;
+        }
+
+        .editor-card {
+            background: var(--surface);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            transition: transform 0.2s ease, border-color 0.2s ease;
+        }
+
+        .editor-card:hover { border-color: rgba(0, 242, 255, 0.3); }
+
+        .card-toolbar {
+            padding: 12px 20px;
+            background: rgba(255,255,255,0.03);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-dim);
+        }
+
+        .tab-indicator { color: var(--accent); background: var(--accent-soft); padding: 4px 10px; border-radius: 6px; }
+
+        textarea, .output-pre {
+            flex: 1;
+            width: 100%;
+            background: transparent;
+            border: none;
+            padding: 20px;
+            color: #d1d5db;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            outline: none;
+            line-height: 1.7;
+            resize: none;
+        }
+
+        .output-pre { overflow-y: auto; white-space: pre-wrap; margin: 0; }
+
+        /* Action Bar */
+        .action-zone {
+            margin-top: 1.5rem;
+            display: flex;
+            justify-content: center;
+        }
+
+        .btn-ush {
+            background: var(--accent);
+            color: #000;
+            padding: 14px 40px;
+            border-radius: 12px;
+            border: none;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1rem;
+            box-shadow: 0 10px 30px rgba(0, 242, 255, 0.2);
+        }
+
+        .btn-ush:hover { transform: translateY(-2px); box-shadow: 0 15px 40px rgba(0, 242, 255, 0.3); }
+        .btn-ush:active { transform: translateY(0); }
+
+        /* Syntax Overrides */
+        pre[class*="language-"] { background: transparent !important; margin: 0 !important; }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--text-dim); }
+
+        @media (max-width: 1000px) {
+            .workspace { grid-template-columns: 1fr; height: auto; }
+            textarea, .output-pre { height: 350px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="bg-glow"></div>
+
+    <div class="container">
+        <header>
+            <div class="brand">
+                <div class="brand-logo">U</div>
+                <div class="brand-name">USH CODE FIXER <span>v3.0 PRO</span></div>
+            </div>
+            
+            <div class="status-bar">
+                <div class="status-item"><div class="dot"></div> ENGINE: GEMINI-3-FLASH</div>
+                <div class="status-item"><i class="fas fa-bolt"></i> LATENCY: 24ms</div>
+                <div class="status-item"><i class="fas fa-shield-halved"></i> SECURE MODE</div>
+            </div>
+        </header>
+
+        <div class="workspace">
+            <!-- SOURCE PANEL -->
+            <div class="editor-card">
+                <div class="card-toolbar">
+                    <span><i class="fas fa-code"></i> INPUT_BUFFER</span>
+                    <span class="tab-indicator">EDITABLE</span>
+                </div>
+                <textarea id="codeInput" spellcheck="false" placeholder="// Paste your broken logic here..."></textarea>
+            </div>
+
+            <!-- DIAGNOSTIC PANEL -->
+            <div class="editor-card">
+                <div class="card-toolbar">
+                    <span><i class="fas fa-terminal"></i> DIAGNOSTIC_OUTPUT</span>
+                    <button onclick="copyCode()" style="background:none; border:none; color:var(--accent); cursor:pointer;">
+                        <i class="fas fa-copy"></i> COPY
+                    </button>
+                </div>
+                <pre class="output-pre language-javascript"><code id="outputCode" class="language-javascript">// System waiting for uplink...</code></pre>
+            </div>
+        </div>
+
+        <div class="action-zone">
+            <button class="btn-ush" onclick="triggerFix()">
+                <i class="fas fa-atom"></i> EXECUTE REPAIR ENGINE
+            </button>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+
+    <script>
+        async function triggerFix() {
+            const input = document.getElementById('codeInput').value;
+            const outputElement = document.getElementById('outputCode');
+            
+            if(!input) return alert("Error: Buffer Empty. Please provide code.");
+
+            outputElement.innerHTML = '<span style="color:var(--accent)">[SYSTEM] Initializing Gemini-3 Bridge...<br>[SYSTEM] Analyzing AST Structures...</span>';
+
+            try {
+                const response = await fetch('/fix', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ code: input })
+                });
+
+                const data = await response.json();
+                
+                // Set the result and trigger Prism highlighting
+                outputElement.textContent = data.result;
+                Prism.highlightElement(outputElement);
+
+            } catch (err) {
+                outputElement.innerHTML = '<span style="color:#ff4444">[CRITICAL] Uplink Failed. Check Console.</span>';
+            }
+        }
+
+        function copyCode() {
+            const code = document.getElementById('outputCode').innerText;
+            navigator.clipboard.writeText(code);
+            alert("Uplink complete: Code copied to clipboard.");
+        }
+    </script>
+</body>
+</html>
